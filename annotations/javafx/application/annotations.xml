@@ -1,0 +1,14 @@
+<root>
+    <item name='javafx.application.Application void launch(java.lang.Class&lt;? extends javafx.application.Application&gt;, java.lang.String...)'>
+        <annotation name='jet.runtime.typeinfo.KotlinSignature'>
+            <val name="value"
+                 val="&quot;fun launch(appClass: Class&lt;out Application?&gt;?, vararg args: String): Unit&quot;"/>
+        </annotation>
+    </item>
+    <item name='javafx.application.Application void launch(java.lang.Class&lt;? extends javafx.application.Application&gt;, java.lang.String...) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='javafx.application.Application void start(javafx.stage.Stage) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

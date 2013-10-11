@@ -1,0 +1,11 @@
+<root>
+    <item name='javafx.stage.Stage javafx.beans.property.StringProperty titleProperty()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='javafx.stage.Window javafx.beans.property.ReadOnlyDoubleProperty heightProperty()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='javafx.stage.Window javafx.beans.property.ReadOnlyDoubleProperty widthProperty()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

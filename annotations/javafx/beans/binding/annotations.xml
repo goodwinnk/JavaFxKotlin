@@ -1,0 +1,7 @@
+<root>
+    <item name='javafx.beans.binding.ObjectBinding void bind(javafx.beans.Observable...)'>
+        <annotation name='jet.runtime.typeinfo.KotlinSignature'>
+            <val name="value" val="&quot;fun bind(vararg p0: Observable): Unit&quot;"/>
+        </annotation>
+    </item>
+</root>
