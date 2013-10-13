@@ -17,8 +17,9 @@ import javafx.event.Event
 import javafx.scene.control.ComboBoxBase
 import javafx.scene.control.Control
 import jfx.example.controls.KotlinApp.ActionBinding
+import javafx.scene.Node
 
-private class DeferedInit<T: Any>() {
+private class DeferredInit<T: Any>() {
     private var pv: T? = null
 
     public val value: T
@@ -38,13 +39,18 @@ open class KotlinApp: Application() {
     }
 
     class FormContext {
-        var text = DeferedInit<Text>()
-        var button = DeferedInit<Button>()
+        var text = DeferredInit<Text>()
+        var button = DeferredInit<Button>()
 
         fun form() = object: Form {
             override val text: Text = this@FormContext.text.value
             override val button: Button = this@FormContext.button.value
         }
+    }
+
+    fun <T: Node> T.store(storeField: DeferredInit<T>): T {
+        storeField.store(this)
+        return this
     }
 
     trait ActionParamDescriptor<T: Event>
@@ -114,10 +120,10 @@ open class KotlinApp: Application() {
                                     setAlignment(Pos.CENTER)
                                     setSpacing(20.0)
                                     getChildren().addAll(
-                                        form.text.store(init(Text("Colors")) {
+                                        init(Text("Colors")) {
                                             setFont(Font(53.0))
-                                        }),
-                                        form.button.store(Button("Colored Control"))
+                                        } store form.text,
+                                        Button("Colored Control") store form.button
                                     )
                                 }
                             )
