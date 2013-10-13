@@ -12,6 +12,11 @@ import javafx.scene.control.ColorPicker
 import javafx.scene.text.Text
 import javafx.scene.text.Font
 import javafx.scene.control.Button
+import javafx.event.ActionEvent
+import javafx.event.Event
+import javafx.scene.control.ComboBoxBase
+import javafx.scene.control.Control
+import jfx.example.controls.KotlinApp.ActionBinding
 
 private class DeferedInit<T: Any>() {
     private var pv: T? = null
@@ -27,16 +32,61 @@ private class DeferedInit<T: Any>() {
 }
 
 open class KotlinApp: Application() {
-    override fun start(primaryStage: Stage) {
-        configure(primaryStage)
-        primaryStage.show()
+    trait Form {
+        val text : Text
+        val button : Button
     }
 
-    open fun configure(primaryStage: Stage) {
-        val colorPicker = DeferedInit<ColorPicker>()
+    class FormContext {
         var text = DeferedInit<Text>()
         var button = DeferedInit<Button>()
 
+        fun form() = object: Form {
+            override val text: Text = this@FormContext.text.value
+            override val button: Button = this@FormContext.button.value
+        }
+    }
+
+    trait ActionParamDescriptor<T: Event>
+    object ON_ACTION: ActionParamDescriptor<ActionEvent>
+
+    inner class ActionBinding<out T: Control, out P: Event, in F>(
+            val control: T,
+            val descriptor: ActionParamDescriptor<P>,
+            val callAfterInit: Boolean,
+            val f: (F) -> Unit) {
+        fun bind(form: F) {
+            if (descriptor == ON_ACTION) {
+                (control as ComboBoxBase<Any>).setOnAction {
+                    f(form)
+                }
+
+                if (callAfterInit) {
+                    f(form)
+                }
+            }
+        }
+    }
+
+    val deferredActions: MutableList<ActionBinding<Control, Event, Form>> = arrayListOf()
+
+    fun <V, T: Event> action(comboboxBase: ComboBoxBase<V>, descriptor: ActionParamDescriptor<T>, callAfterInit: Boolean = true, f: (Form) -> Unit) {
+        deferredActions.add(ActionBinding(comboboxBase, descriptor, callAfterInit, f))
+    }
+
+    override fun start(primaryStage: Stage) {
+        val context = FormContext()
+        configure(primaryStage, context)
+
+        val form = context.form()
+        for (binding in deferredActions) {
+            binding.bind(form)
+        }
+
+        primaryStage.show()
+    }
+
+    open fun configure(primaryStage: Stage, form: FormContext) {
         fun createRGBString(color: Color) = "-fx-base: rgb(${color.getRed() * 255}, ${color.getGreen() * 255}, ${color.getBlue() * 255});"
 
         init(primaryStage) {
@@ -51,17 +101,23 @@ open class KotlinApp: Application() {
                             getChildren().addAll(
                                 init(ToolBar()) {
                                     getChildren().addAll(
-                                        colorPicker.store(ColorPicker(Color.GRAY))
+                                        init(ColorPicker(Color.GREEN)) {
+                                            action(this, ON_ACTION) { form ->
+                                                val color = getValue()!!
+                                                form.text.setFill(color)
+                                                form.button.setStyle(createRGBString(color))
+                                            }
+                                        }
                                     )
                                 },
                                 init(VBox()) {
                                     setAlignment(Pos.CENTER)
                                     setSpacing(20.0)
                                     getChildren().addAll(
-                                        init(text.store(Text("Colors"))) {
+                                        form.text.store(init(Text("Colors")) {
                                             setFont(Font(53.0))
-                                        },
-                                        button.store(Button("Colored Control"))
+                                        }),
+                                        form.button.store(Button("Colored Control"))
                                     )
                                 }
                             )
@@ -70,16 +126,6 @@ open class KotlinApp: Application() {
                 }
             }
         }
-
-        fun onColorUpdate() {
-            val color = colorPicker.value.getValue()!!
-            text.value.setFill(color)
-            button.value.setStyle(createRGBString(color))
-        }
-
-
-        colorPicker.value.setOnAction { onColorUpdate() }
-        onColorUpdate()
     }
 }
 
