@@ -7,6 +7,7 @@ import javafx.scene.control.Control
 import javafx.scene.control.ComboBoxBase
 import javafx.application.Application
 import javafx.stage.Stage
+import javafx.beans.value.ObservableValue
 
 class DeferredInit<T: Any>() {
     private var pv: T? = null
@@ -50,15 +51,37 @@ class ActionBinding<out T: Control, out P: Event, in F>(
     }
 }
 
+class ChangeLisnerBinding<in T: Any, F>(
+        val observableValue: ObservableValue<in T>,
+        val initValue: T? = null,
+        val callAfterInit: Boolean = true,
+        val f: (F, T?) -> Unit) {
+    fun bind(form: F) {
+        observableValue.addListener { value, old, new ->
+            f(form, new)
+        }
+
+        if (callAfterInit) {
+            f(form, initValue)
+        }
+    }
+}
+
+
 trait Builder<Form> {
     fun form(): Form
 }
 
 public abstract class KotlinApp<Form, FormBuilder: Builder<Form>>: Application() {
     private val deferredActions: MutableList<ActionBinding<Control, Event, Form>> = arrayListOf()
+    private val propertyChangeListners: MutableList<ChangeLisnerBinding<Nothing, Form>> = arrayListOf()
 
     public fun <V, T: Event> action(comboboxBase: ComboBoxBase<V>, descriptor: ActionParamDescriptor<T>, callAfterInit: Boolean = true, f: (Form) -> Unit) {
         deferredActions.add(ActionBinding(comboboxBase, descriptor, callAfterInit, f))
+    }
+
+    public fun <T: Any> changeListner(observableValue: ObservableValue<T>, initValue: T? = null, callAfterInit: Boolean = true, f: (Form, T?) -> Unit) {
+        propertyChangeListners.add(ChangeLisnerBinding(observableValue, initValue, callAfterInit, f))
     }
 
     override fun start(primaryStage: Stage) {
@@ -67,6 +90,10 @@ public abstract class KotlinApp<Form, FormBuilder: Builder<Form>>: Application()
 
         val form = context.form()
         for (binding in deferredActions) {
+            binding.bind(form)
+        }
+
+        for (binding in propertyChangeListners) {
             binding.bind(form)
         }
 

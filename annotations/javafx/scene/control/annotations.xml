@@ -1,0 +1,5 @@
+<root>
+    <item name='javafx.scene.control.ToggleGroup javafx.beans.property.ReadOnlyObjectProperty&lt;javafx.scene.control.Toggle&gt; selectedToggleProperty()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>
