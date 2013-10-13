@@ -16,83 +16,26 @@ import javafx.event.ActionEvent
 import javafx.event.Event
 import javafx.scene.control.ComboBoxBase
 import javafx.scene.control.Control
-import jfx.example.controls.KotlinApp.ActionBinding
 import javafx.scene.Node
 
-private class DeferredInit<T: Any>() {
-    private var pv: T? = null
+trait Form {
+    val text : Text
+    val button : Button
+}
 
-    public val value: T
-        get() { return pv ?: throw IllegalStateException("Property should be initialized before get") }
+class FormContext: Builder<Form> {
+    var text = DeferredInit<Text>()
+    var button = DeferredInit<Button>()
 
-    public fun store(v: T): T {
-        if (pv != null) throw IllegalStateException("Already initialized")
-        pv = v
-        return v
+    override fun form() = object: Form {
+        override val text: Text = this@FormContext.text.value
+        override val button: Button = this@FormContext.button.value
     }
 }
 
-open class KotlinApp: Application() {
-    trait Form {
-        val text : Text
-        val button : Button
-    }
-
-    class FormContext {
-        var text = DeferredInit<Text>()
-        var button = DeferredInit<Button>()
-
-        fun form() = object: Form {
-            override val text: Text = this@FormContext.text.value
-            override val button: Button = this@FormContext.button.value
-        }
-    }
-
-    fun <T: Node> T.store(storeField: DeferredInit<T>): T {
-        storeField.store(this)
-        return this
-    }
-
-    trait ActionParamDescriptor<T: Event>
-    object ON_ACTION: ActionParamDescriptor<ActionEvent>
-
-    inner class ActionBinding<out T: Control, out P: Event, in F>(
-            val control: T,
-            val descriptor: ActionParamDescriptor<P>,
-            val callAfterInit: Boolean,
-            val f: (F) -> Unit) {
-        fun bind(form: F) {
-            if (descriptor == ON_ACTION) {
-                (control as ComboBoxBase<Any>).setOnAction {
-                    f(form)
-                }
-
-                if (callAfterInit) {
-                    f(form)
-                }
-            }
-        }
-    }
-
-    val deferredActions: MutableList<ActionBinding<Control, Event, Form>> = arrayListOf()
-
-    fun <V, T: Event> action(comboboxBase: ComboBoxBase<V>, descriptor: ActionParamDescriptor<T>, callAfterInit: Boolean = true, f: (Form) -> Unit) {
-        deferredActions.add(ActionBinding(comboboxBase, descriptor, callAfterInit, f))
-    }
-
-    override fun start(primaryStage: Stage) {
-        val context = FormContext()
-        configure(primaryStage, context)
-
-        val form = context.form()
-        for (binding in deferredActions) {
-            binding.bind(form)
-        }
-
-        primaryStage.show()
-    }
-
-    open fun configure(primaryStage: Stage, form: FormContext) {
+open class ColorPickerSample: KotlinApp<Form, FormContext>() {
+    override fun createContext() = FormContext()
+    override fun configure(primaryStage: Stage, form: FormContext) {
         fun createRGBString(color: Color) = "-fx-base: rgb(${color.getRed() * 255}, ${color.getGreen() * 255}, ${color.getBlue() * 255});"
 
         init(primaryStage) {
@@ -108,7 +51,7 @@ open class KotlinApp: Application() {
                                 init(ToolBar()) {
                                     getChildren().addAll(
                                         init(ColorPicker(Color.GREEN)) {
-                                            action(this, ON_ACTION) { form ->
+                                            action(this, Actions.ON_ACTION) { form ->
                                                 val color = getValue()!!
                                                 form.text.setFill(color)
                                                 form.button.setStyle(createRGBString(color))
@@ -136,5 +79,5 @@ open class KotlinApp: Application() {
 }
 
 fun main(args: Array<String>) {
-    Application.launch(javaClass<KotlinApp>(), *args)
+    Application.launch(javaClass<ColorPickerSample>(), *args)
 }
