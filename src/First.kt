@@ -17,7 +17,7 @@ open class KotlinApp: Application() {
             width = 300.0
             height = 300.0
             scene = scene {
-                parent = group {
+                group {
                     rectangle(100.0, 100.0, 100.0, 100.0) {
                         fillProperty.bind(hoverProperty) { if (isHover()) Color.BLUE else Color.ORANGE }
                     }

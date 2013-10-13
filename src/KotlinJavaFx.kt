@@ -36,15 +36,14 @@ var Stage.scene: Scene?
     set(v) = this.setScene(v)
 
 class SceneBuilder {
-    var parent: Parent? = null
     var fill: Paint? = null
 }
 
-fun Stage.scene(sceneInit: SceneBuilder.() -> Unit): Scene {
+fun Stage.scene(sceneInit: SceneBuilder.() -> Parent): Scene {
     val builder = SceneBuilder()
-    builder.sceneInit()
+    val parent = builder.sceneInit()
 
-    val scene = Scene(builder.parent!!)
+    val scene = Scene(parent)
     scene.setFill(builder.fill)
 
     return scene
